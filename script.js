@@ -182,3 +182,33 @@ if (btnFullscreen) {
     }
   });
 }
+
+// ★追加：画面を下に引っ張ってリロード（Pull-to-Refresh）する機能
+let touchStartY = 0;
+let isPulling = false;
+
+document.addEventListener('touchstart', (e) => {
+  touchStartY = e.touches[0].clientY;
+  isPulling = true;
+}, { passive: true });
+
+document.addEventListener('touchmove', (e) => {
+  if (!isPulling) return;
+
+  const touchY = e.touches[0].clientY;
+  const pullDistance = touchY - touchStartY;
+
+  // 上から下へ 150px 以上スワイプ（引っ張る）されたらリロードを実行
+  if (pullDistance > 150) {
+    isPulling = false; // 連続発火を防止
+
+    // リロードされることが直感的にわかるよう、画面をフワッと暗くするエフェクト
+    document.body.style.transition = 'opacity 0.2s ease';
+    document.body.style.opacity = '0.3';
+
+    // 0.2秒後にページを再読み込み
+    setTimeout(() => {
+      location.reload();
+    }, 200);
+  }
+}, { passive: true });

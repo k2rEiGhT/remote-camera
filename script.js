@@ -1,9 +1,10 @@
+// 【重要】ご家族専用の固定IDと接続用の合言葉
 const CAMERA_ID = 'baba-baby-cam-secret2026';
-const SECRET_PIN = 'risaki';
+const SECRET_PIN = 'risaki'; // ★ご指定の合言葉に変更しました
 
 let peer = null;
 let localStream = null;
-let useFrontCamera = false;
+let useFrontCamera = false; // 最初は画角の広い背面カメラ(environment)を使用
 
 // UI要素の取得
 const mainTitle = document.getElementById('main-title');
@@ -20,16 +21,24 @@ const monitorStatus = document.getElementById('monitor-status');
 const pinGroup = document.getElementById('pin-group');
 const secretPinInput = document.getElementById('secret-pin');
 const btnConnectSecure = document.getElementById('btn-connect-secure');
+const monitorControls = document.getElementById('monitor-controls'); // ★追加: ボタン群
+const btnPip = document.getElementById('btn-pip');                   // ★追加: PiP
 const btnFullscreen = document.getElementById('btn-fullscreen');
 
+// カメラ映像を取得する共通関数
 async function getCameraStream() {
-  if (localStream) localStream.getTracks().forEach(track => track.stop());
+  if (localStream) {
+    localStream.getTracks().forEach(track => track.stop());
+  }
   const mode = useFrontCamera ? "user" : "environment";
-  localStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: mode }, audio: true });
+  localStream = await navigator.mediaDevices.getUserMedia({
+    video: { facingMode: mode },
+    audio: true
+  });
   localVideo.srcObject = localStream;
 }
 
-// 【カメラとして使う】
+// 【カメラとして使う（古いiPhone用）】
 btnCamera.addEventListener('click', async () => {
   mainTitle.classList.add('hidden'); // タイトルを消して画面を広く使う
   modeSelection.classList.add('hidden');
@@ -40,23 +49,27 @@ btnCamera.addEventListener('click', async () => {
     peer = new Peer(CAMERA_ID);
 
     peer.on('call', (call) => {
+      // モニター側から送られてきたパスワードを検証
       if (call.metadata && call.metadata.pin === SECRET_PIN) {
         call.answer(localStream);
         cameraStatus.textContent = "🟢 モニター接続中"; // 接続状態をバッジに表示
       } else {
+        console.warn('合言葉が一致しないため、通信をブロックしました');
         call.close();
       }
     });
+
   } catch (err) {
     alert('カメラの取得に失敗: ' + err);
   }
 });
 
-// カメラ切り替え
+// カメラ切り替え（通信中も途切れず切り替え可能）
 if (btnSwitchCamera) {
   btnSwitchCamera.addEventListener('click', async () => {
     useFrontCamera = !useFrontCamera;
     await getCameraStream();
+
     if (peer) {
       const newVideoTrack = localStream.getVideoTracks()[0];
       for (let conns in peer.connections) {
@@ -71,55 +84,101 @@ if (btnSwitchCamera) {
   });
 }
 
-// 【モニターとして使う】
+// 【モニターモードへ遷移する（Mac / iPad / 普段用iPhone用）】
 btnMonitor.addEventListener('click', () => {
   mainTitle.classList.add('hidden'); // タイトルを消す
   modeSelection.classList.add('hidden');
   monitorSection.classList.remove('hidden');
 
   const savedPin = localStorage.getItem('savedBabyCamPin');
-  if (savedPin) secretPinInput.value = savedPin;
+  if (savedPin) {
+    secretPinInput.value = savedPin;
+  }
 });
 
+// 【パスワードを送信して接続する】
 btnConnectSecure.addEventListener('click', () => {
   const enteredPin = secretPinInput.value.trim();
-  if (!enteredPin) return alert('合言葉を入力してください');
 
+  if (!enteredPin) {
+    alert('合言葉を入力してください');
+    return;
+  }
+
+  // 次回から入力を省略できるように localStorage に保存
   localStorage.setItem('savedBabyCamPin', enteredPin);
-  monitorStatus.textContent = "認証中(v7)...";
+  monitorStatus.textContent = "認証中(v9)...";
 
   peer = new Peer();
+
   peer.on('open', () => {
+    // 安定化ハック：ダミーの空ストリームを作って発信
     const canvas = document.createElement('canvas');
-    const call = peer.call(CAMERA_ID, canvas.captureStream(), { metadata: { pin: enteredPin } });
+    const dummyStream = canvas.captureStream();
+
+    // 接続要求に metadata としてパスワードを添付する
+    const call = peer.call(CAMERA_ID, dummyStream, {
+      metadata: { pin: enteredPin }
+    });
 
     call.on('stream', (remoteStream) => {
-      // 映像を受信したら、合言葉入力欄とステータスを消して完全な全画面にする
+      // 映像を受信したら、合言葉入力欄とステータスを消してボタン群を表示
       pinGroup.classList.add('hidden');
       monitorStatus.classList.add('hidden');
-      btnFullscreen.classList.remove('hidden');
+      monitorControls.classList.remove('hidden');
 
       remoteVideo.srcObject = remoteStream;
-      remoteVideo.play().catch(e => { remoteVideo.controls = true; });
+      remoteVideo.play().catch(e => {
+        remoteVideo.controls = true;
+      });
     });
 
     call.on('close', () => {
       monitorStatus.textContent = "切断されました";
       monitorStatus.classList.remove('hidden');
-      btnFullscreen.classList.add('hidden');
+      monitorControls.classList.add('hidden');
     });
   });
 
   peer.on('error', (err) => {
-    monitorStatus.textContent = err.type === 'peer-unavailable' ? "カメラが見つかりません。" : "通信エラー";
+    if (err.type === 'peer-unavailable') {
+      monitorStatus.textContent = "カメラが見つかりません。iPhoneが起動しているか確認してください。";
+    } else {
+      monitorStatus.textContent = "通信エラー: " + err.type;
+    }
   });
 });
 
-// 全画面表示ボタン
+// 小窓（PiP）表示ボタンの処理
+if (btnPip) {
+  btnPip.addEventListener('click', async () => {
+    try {
+      if (document.pictureInPictureElement) {
+        // すでにPiP状態なら元に戻す
+        await document.exitPictureInPicture();
+      } else if (remoteVideo.requestPictureInPicture) {
+        // 標準のPiP API
+        await remoteVideo.requestPictureInPicture();
+      } else if (remoteVideo.webkitSetPresentationMode) {
+        // iOS Safari専用のPiP API（古い機種対応用）
+        remoteVideo.webkitSetPresentationMode('picture-in-picture');
+      }
+    } catch (error) {
+      console.error(error);
+      alert("このブラウザは小窓表示に対応していません。");
+    }
+  });
+}
+
+// 全画面表示ボタンの処理
 if (btnFullscreen) {
   btnFullscreen.addEventListener('click', () => {
-    if (remoteVideo.requestFullscreen) remoteVideo.requestFullscreen();
-    else if (remoteVideo.webkitRequestFullscreen) remoteVideo.webkitRequestFullscreen();
-    else if (remoteVideo.webkitEnterFullscreen) remoteVideo.webkitEnterFullscreen();
+    if (remoteVideo.requestFullscreen) {
+      remoteVideo.requestFullscreen(); // Mac / iPad用
+    } else if (remoteVideo.webkitRequestFullscreen) {
+      remoteVideo.webkitRequestFullscreen(); // 古いSafari用
+    } else if (remoteVideo.webkitEnterFullscreen) {
+      remoteVideo.webkitEnterFullscreen(); // iPhone用（ネイティブプレイヤー起動）
+    }
   });
 }

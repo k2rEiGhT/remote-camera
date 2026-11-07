@@ -125,11 +125,18 @@ video {
   z-index: 10;
 }
 
-/* ★UI改善：映像の上に浮かせる半透明ボタン */
-.overlay-btn {
+/* ★追加：右下のボタン群をまとめるコンテナ */
+.overlay-controls {
   position: absolute;
   bottom: 15px;
   right: 15px;
+  display: flex;
+  gap: 10px;
+  z-index: 10;
+}
+
+/* ★変更：個別のボタンからは位置指定（bottom, right）を削除 */
+.overlay-btn {
   width: auto;
   padding: 12px 20px;
   background-color: rgba(0, 0, 0, 0.6);
@@ -137,7 +144,9 @@ video {
   -webkit-backdrop-filter: blur(8px);
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 12px;
-  z-index: 10;
+  color: #ffffff;
+  /* 文字色を明示 */
+  font-size: 13px;
 }
 
 .hidden {

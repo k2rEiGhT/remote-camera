@@ -2,13 +2,11 @@
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   background-color: #000000;
-  /* 有機ELで映える完全な黒 */
   color: #e0e0e0;
   text-align: center;
   margin: 0;
   padding: 0;
   height: 100dvh;
-  /* スマホのアドレスバーを除いた画面高さに固定 */
   display: flex;
   justify-content: center;
   align-items: center;
@@ -19,13 +17,12 @@ body {
   width: 100%;
   max-width: 600px;
   height: 100%;
-  padding: 20px;
+  padding: 15px;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
 }
 
-/* テキスト要素の余白を最小限に圧縮 */
 h1 {
   font-size: 20px;
   margin: 10px 0 20px;
@@ -34,20 +31,6 @@ h1 {
   letter-spacing: 2px;
 }
 
-h2 {
-  font-size: 16px;
-  margin: 0 0 10px;
-  color: #888888;
-  font-weight: 400;
-}
-
-p {
-  font-size: 14px;
-  margin: 0 0 15px;
-  color: #666666;
-}
-
-/* モード選択ボタンを「横並び」にして縦幅を半減 */
 #mode-selection {
   display: flex;
   gap: 15px;
@@ -63,23 +46,12 @@ button {
   border: none;
   border-radius: 12px;
   cursor: pointer;
-  transition: background-color 0.2s;
 }
 
 button:hover {
   background-color: #2c2c2e;
 }
 
-/* カメラ反転ボタンは控えめなサイズに */
-#btn-switch-camera {
-  margin: 0 auto 15px;
-  padding: 10px 20px;
-  font-size: 13px;
-  max-width: 200px;
-  background-color: #2c2c2e;
-}
-
-/* 合言葉入力欄と接続ボタンも「横並び」に統合 */
 .pin-input-group {
   display: flex;
   gap: 10px;
@@ -96,7 +68,6 @@ button:hover {
   border-radius: 12px;
   text-align: center;
   letter-spacing: 4px;
-  transition: all 0.3s ease;
   box-sizing: border-box;
 }
 
@@ -112,7 +83,7 @@ button:hover {
   font-weight: bold;
 }
 
-/* ビデオエリアを残りの画面スペース「すべて」に拡張 */
+/* 映像エリアを画面いっぱいに広げる */
 .video-container,
 #camera-section,
 #monitor-section {
@@ -121,6 +92,7 @@ button:hover {
   flex-direction: column;
   position: relative;
   width: 100%;
+  min-height: 0;
 }
 
 .video-container {
@@ -128,29 +100,44 @@ button:hover {
   align-items: center;
   border-radius: 16px;
   overflow: hidden;
-  background-color: #111;
+  background-color: #000;
 }
 
 video {
   width: 100%;
   height: 100%;
   object-fit: contain;
-  /* 映像を見切れないように最大化 */
   border-radius: 16px;
 }
 
-/* 全画面ボタンをすりガラス風に配置 */
-#btn-fullscreen {
+/* ★UI改善：映像の上に浮かせる半透明ステータスバッジ */
+.overlay-status {
+  position: absolute;
+  top: 15px;
+  left: 15px;
+  background-color: rgba(0, 0, 0, 0.6);
+  padding: 8px 14px;
+  border-radius: 20px;
+  font-size: 13px;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  z-index: 10;
+}
+
+/* ★UI改善：映像の上に浮かせる半透明ボタン */
+.overlay-btn {
   position: absolute;
   bottom: 15px;
   right: 15px;
   width: auto;
-  padding: 10px 15px;
-  font-size: 13px;
-  background-color: rgba(0, 0, 0, 0.5);
+  padding: 12px 20px;
+  background-color: rgba(0, 0, 0, 0.6);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  z-index: 10;
 }
 
 .hidden {

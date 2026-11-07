@@ -5,48 +5,46 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ベビーモニター</title>
-
   <link rel="icon" href="favicon.png" type="image/png">
   <link rel="apple-touch-icon" href="favicon.png">
-
   <link rel="stylesheet" href="style.css">
   <script src="https://unpkg.com/peerjs@1.5.1/dist/peerjs.min.js"></script>
 </head>
 
 <body>
   <div class="container">
-    <h1>ベビーモニター</h1>
+    <!-- モード選択後に非表示にするメインタイトル -->
+    <h1 id="main-title">ベビーモニター</h1>
 
     <!-- モード選択 -->
     <div id="mode-selection">
-      <button id="btn-camera">カメラとして起動する</button>
+      <button id="btn-camera">カメラとして起動</button>
       <button id="btn-monitor">モニターとして見る</button>
     </div>
 
-    <!-- カメラモード（配信側：古いiPhone） -->
+    <!-- カメラモード（配信側） -->
     <div id="camera-section" class="hidden">
-      <h2>カメラ作動中</h2>
-      <button id="btn-switch-camera">カメラを反転する</button>
-      <p>モニター側からの接続を待機しています...</p>
-      <video id="local-video" autoplay playsinline muted></video>
+      <div class="video-container">
+        <video id="local-video" autoplay playsinline muted></video>
+        <!-- 映像の上に浮かせるステータスとボタン -->
+        <div id="camera-status" class="overlay-status">待機中...</div>
+        <button id="btn-switch-camera" class="overlay-btn">🔄 カメラ反転</button>
+      </div>
     </div>
 
-    <!-- モニターモード（視聴側：iPad / iPhone） -->
+    <!-- モニターモード（視聴側） -->
     <div id="monitor-section" class="hidden">
-      <h2>モニターモード</h2>
-
-      <!-- ★UI改善：合言葉入力エリア -->
-      <div class="pin-input-group">
+      <!-- 接続後に非表示にする入力欄 -->
+      <div id="pin-group" class="pin-input-group">
         <input type="password" id="secret-pin" placeholder="合言葉を入力">
-        <button id="btn-connect-secure">接続する</button>
+        <button id="btn-connect-secure">接続</button>
       </div>
 
-      <p id="monitor-status">待機中...</p>
-
-      <!-- ★追加：全画面表示対応の映像エリア -->
       <div class="video-container">
         <video id="remote-video" autoplay playsinline></video>
-        <button id="btn-fullscreen" class="hidden">全画面表示</button>
+        <!-- 映像の上に浮かせるステータスとボタン -->
+        <div id="monitor-status" class="overlay-status">待機中...</div>
+        <button id="btn-fullscreen" class="overlay-btn hidden">全画面表示</button>
       </div>
     </div>
   </div>

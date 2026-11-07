@@ -1,4 +1,5 @@
 /* 全体を画面ピッタリに収め、スクロールを完全に防ぐ */
+/* ★修正：Chromeのタブバーが消えないように調整 */
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   background-color: #000000;
@@ -6,11 +7,13 @@ body {
   text-align: center;
   margin: 0;
   padding: 0;
-  height: 100dvh;
+  height: 100svh;
+  /* ★変更: dvh から svh に（ブラウザのUI領域を常に確保する設定） */
   display: flex;
   justify-content: center;
   align-items: center;
-  overflow: hidden;
+  overflow: auto;
+  /* ★変更: hidden から auto に（ブラウザ標準のスクロール機能を復活） */
 }
 
 .container {

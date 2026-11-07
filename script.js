@@ -4,7 +4,6 @@ const CAMERA_ID = 'baba-baby-cam-secret2026';
 let peer = null;
 let localStream = null;
 
-// UI要素の取得
 const modeSelection = document.getElementById('mode-selection');
 const cameraSection = document.getElementById('camera-section');
 const monitorSection = document.getElementById('monitor-section');
@@ -20,7 +19,6 @@ btnCamera.addEventListener('click', async () => {
   cameraSection.classList.remove('hidden');
 
   try {
-    // 映像（インカメラ）と音声を取得
     localStream = await navigator.mediaDevices.getUserMedia({
       video: { facingMode: "user" },
       audio: true
@@ -29,22 +27,17 @@ btnCamera.addEventListener('click', async () => {
 
     peer = new Peer(CAMERA_ID);
 
-    // ★変更点：モニターからの「接続要求（合図）」を受け取ったら、映像を発信する
-    peer.on('connection', (conn) => {
-      // conn.peer にはモニター側のランダムIDが入っている
-      peer.call(conn.peer, localStream);
-    });
-
-    peer.on('error', (err) => {
-      console.error('カメラ側の通信エラー: ', err);
+    // モニターから着信があったら自分の映像を返す
+    peer.on('call', (call) => {
+      call.answer(localStream);
     });
 
   } catch (err) {
-    alert('カメラまたはマイクの取得に失敗しました: ' + err);
+    alert('カメラの取得に失敗: ' + err);
   }
 });
 
-// 【モニターとして使う（iPad / 普段用iPhone用）】
+// 【モニターとして使う（Mac / iPad用）】
 btnMonitor.addEventListener('click', () => {
   modeSelection.classList.add('hidden');
   monitorSection.classList.remove('hidden');
@@ -52,33 +45,34 @@ btnMonitor.addEventListener('click', () => {
   peer = new Peer();
 
   peer.on('open', () => {
-    monitorStatus.textContent = "カメラを探しています...";
-    // ★変更点：いきなりビデオ通話を発信せず、まずはデータ通信で「合図」を送る
-    peer.connect(CAMERA_ID);
-  });
+    // ★キャッシュ更新確認用の目印 (v3) を追加
+    monitorStatus.textContent = "カメラを呼び出しています(v3)...";
 
-  // カメラから映像が送られてきたら受ける
-  peer.on('call', (call) => {
-    call.answer(); // こちらからは映像を送らないので空でOK
+    // ★安定化ハック：ダミーの空ストリームを作ってカメラに発信する
+    const canvas = document.createElement('canvas');
+    const dummyStream = canvas.captureStream();
+
+    const call = peer.call(CAMERA_ID, dummyStream);
 
     call.on('stream', (remoteStream) => {
-      monitorStatus.textContent = "映像を受信しています";
+      monitorStatus.textContent = "映像を受信しました";
       remoteVideo.srcObject = remoteStream;
-
-      // ★iOSの自動再生ブロック対策を追加
       remoteVideo.play().catch(e => {
-        console.error("自動再生がブロックされました:", e);
-        monitorStatus.textContent = "映像をタップして再生してください";
-        remoteVideo.controls = true; // コントロールバーを表示して手動再生可能にする
+        monitorStatus.textContent = "自動再生ブロック: 映像をタップしてください";
+        remoteVideo.controls = true;
       });
+    });
+
+    call.on('error', (err) => {
+      monitorStatus.textContent = "通話エラー: " + err;
     });
   });
 
   peer.on('error', (err) => {
     if (err.type === 'peer-unavailable') {
-      monitorStatus.textContent = "カメラが見つかりません。寝室のiPhoneが起動しているか確認してください。";
+      monitorStatus.textContent = "カメラが見つかりません。iPhoneが起動しているか確認してください。";
     } else {
-      monitorStatus.textContent = '通信エラー: ' + err.type;
+      monitorStatus.textContent = "通信エラー: " + err.type;
     }
   });
 });

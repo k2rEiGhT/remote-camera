@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ベビーモニター</title>
+  <link rel="stylesheet" href="style.css">
+  <!-- PeerJSの読み込み -->
+  <script src="https://unpkg.com/peerjs@1.5.1/dist/peerjs.min.js"></script>
+</head>
+
+<body>
+  <div class="container">
+    <h1>ベビーモニター</h1>
+
+    <!-- モード選択 -->
+    <div id="mode-selection">
+      <button id="btn-camera">カメラとして起動する</button>
+      <button id="btn-monitor">モニターとして見る</button>
+    </div>
+
+    <!-- カメラモード（配信側：古いiPhone） -->
+    <div id="camera-section" class="hidden">
+      <h2>カメラ作動中</h2>
+      <p>モニター側からの接続を待機しています...</p>
+      <!-- カメラ側は音がハウリングしないように muted を設定 -->
+      <video id="local-video" autoplay playsinline muted></video>
+    </div>
+
+    <!-- モニターモード（視聴側：iPad / iPhone） -->
+    <div id="monitor-section" class="hidden">
+      <h2>モニターモード</h2>
+      <p id="monitor-status">カメラに接続中...</p>
+      <video id="remote-video" autoplay playsinline></video>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+
+</html>

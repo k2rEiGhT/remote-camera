@@ -46,9 +46,27 @@
         <div id="monitor-status" class="overlay-status">待機中...</div>
 
         <!-- ★変更：PiPと全画面ボタンを横並びにするコンテナ -->
+        <!-- ★変更：PiPと全画面ボタンをイラスト（SVG）アイコン化 -->
         <div id="monitor-controls" class="overlay-controls hidden">
-          <button id="btn-pip" class="overlay-btn">小窓表示</button>
-          <button id="btn-fullscreen" class="overlay-btn">全画面</button>
+          <!-- 小窓表示（PiP）アイコン -->
+          <button id="btn-pip" class="overlay-icon-btn" title="小窓表示">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 9V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h4"></path>
+              <rect x="13" y="13" width="8" height="6" rx="1" ry="1"></rect>
+            </svg>
+          </button>
+
+          <!-- 全画面表示アイコン -->
+          <button id="btn-fullscreen" class="overlay-icon-btn" title="全画面表示">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path d="M8 3H5a2 2 0 0 0-2 2v3"></path>
+              <path d="M16 3h3a2 2 0 0 1 2 2v3"></path>
+              <path d="M8 21H5a2 2 0 0 1-2-2v-3"></path>
+              <path d="M16 21h3a2 2 0 0 0 2-2v-3"></path>
+            </svg>
+          </button>
         </div>
       </div>
     </div>

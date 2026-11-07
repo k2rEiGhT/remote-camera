@@ -5,10 +5,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ベビーモニター</title>
+
   <link rel="icon" href="favicon.png" type="image/png">
   <link rel="apple-touch-icon" href="favicon.png">
+
   <link rel="stylesheet" href="style.css">
-  <!-- PeerJSの読み込み -->
   <script src="https://unpkg.com/peerjs@1.5.1/dist/peerjs.min.js"></script>
 </head>
 
@@ -27,19 +28,26 @@
       <h2>カメラ作動中</h2>
       <button id="btn-switch-camera">カメラを反転する</button>
       <p>モニター側からの接続を待機しています...</p>
-      <!-- カメラ側は音がハウリングしないように muted を設定 -->
       <video id="local-video" autoplay playsinline muted></video>
     </div>
 
     <!-- モニターモード（視聴側：iPad / iPhone） -->
     <div id="monitor-section" class="hidden">
       <h2>モニターモード</h2>
-      <!-- ★追加：パスワード入力欄 -->
-      <input type="password" id="secret-pin" placeholder="合言葉を入力">
-      <button id="btn-connect-secure">接続する</button>
+
+      <!-- ★UI改善：合言葉入力エリア -->
+      <div class="pin-input-group">
+        <input type="password" id="secret-pin" placeholder="合言葉を入力">
+        <button id="btn-connect-secure">接続する</button>
+      </div>
 
       <p id="monitor-status">待機中...</p>
-      <video id="remote-video" autoplay playsinline></video>
+
+      <!-- ★追加：全画面表示対応の映像エリア -->
+      <div class="video-container">
+        <video id="remote-video" autoplay playsinline></video>
+        <button id="btn-fullscreen" class="hidden">全画面表示</button>
+      </div>
     </div>
   </div>
 

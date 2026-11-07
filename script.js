@@ -1,5 +1,4 @@
 // 【重要】ご家族専用の固定ID
-// 世界で一意になるよう、推測されにくい文字列に変更して使ってください
 const CAMERA_ID = 'baba-baby-cam-secret2026';
 
 let peer = null;
@@ -28,16 +27,16 @@ btnCamera.addEventListener('click', async () => {
     });
     localVideo.srcObject = localStream;
 
-    // 固定IDでPeerサーバーに接続して待機
     peer = new Peer(CAMERA_ID);
 
-    // モニターから着信があったら、自分の映像ストリームを返す
-    peer.on('call', (call) => {
-      call.answer(localStream);
+    // ★変更点：モニターからの「接続要求（合図）」を受け取ったら、映像を発信する
+    peer.on('connection', (conn) => {
+      // conn.peer にはモニター側のランダムIDが入っている
+      peer.call(conn.peer, localStream);
     });
 
     peer.on('error', (err) => {
-      alert('カメラ側の通信エラー: ' + err.type);
+      console.error('カメラ側の通信エラー: ', err);
     });
 
   } catch (err) {
@@ -50,28 +49,32 @@ btnMonitor.addEventListener('click', () => {
   modeSelection.classList.add('hidden');
   monitorSection.classList.remove('hidden');
 
-  // モニター側はランダムなIDでPeerサーバーに接続
   peer = new Peer();
 
   peer.on('open', () => {
-    // Peerサーバーに繋がったら、即座にカメラの固定IDへ自動発信
-    const call = peer.call(CAMERA_ID, null);
+    monitorStatus.textContent = "カメラを探しています...";
+    // ★変更点：いきなりビデオ通話を発信せず、まずはデータ通信で「合図」を送る
+    peer.connect(CAMERA_ID);
+  });
 
-    // カメラ側から映像が返ってきたら再生
+  // カメラから映像が送られてきたら受ける
+  peer.on('call', (call) => {
+    call.answer(); // こちらからは映像を送らないので空でOK
+
     call.on('stream', (remoteStream) => {
       monitorStatus.textContent = "映像を受信しています";
       remoteVideo.srcObject = remoteStream;
-      // iOS Chrome/Safari対策として明示的にplay()を呼ぶ
-      remoteVideo.play().catch(e => console.error("再生エラー:", e));
-    });
 
-    call.on('close', () => {
-      monitorStatus.textContent = "カメラとの接続が切れました";
+      // ★iOSの自動再生ブロック対策を追加
+      remoteVideo.play().catch(e => {
+        console.error("自動再生がブロックされました:", e);
+        monitorStatus.textContent = "映像をタップして再生してください";
+        remoteVideo.controls = true; // コントロールバーを表示して手動再生可能にする
+      });
     });
   });
 
   peer.on('error', (err) => {
-    // カメラ側がまだ起動していない場合のエラーハンドリング
     if (err.type === 'peer-unavailable') {
       monitorStatus.textContent = "カメラが見つかりません。寝室のiPhoneが起動しているか確認してください。";
     } else {

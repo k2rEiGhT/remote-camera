@@ -1,28 +1,31 @@
-// 【重要】ご家族専用の固定ID
+// 【重要】ご家族専用の固定IDと、接続用のパスワード
 const CAMERA_ID = 'baba-baby-cam-secret2026';
+const SECRET_PIN = 'risaki'; // 任意のパスワードに変更可能です
 
 let peer = null;
 let localStream = null;
-let useFrontCamera = false; // ★最初は背面カメラ(environment)を使用する設定
+let useFrontCamera = false; // 最初は画角の広い背面カメラ(environment)を使用する設定
 
+// UI要素の取得
 const modeSelection = document.getElementById('mode-selection');
 const cameraSection = document.getElementById('camera-section');
 const monitorSection = document.getElementById('monitor-section');
 const btnCamera = document.getElementById('btn-camera');
 const btnMonitor = document.getElementById('btn-monitor');
-const btnSwitchCamera = document.getElementById('btn-switch-camera'); // ★追加
+const btnSwitchCamera = document.getElementById('btn-switch-camera');
 const localVideo = document.getElementById('local-video');
 const remoteVideo = document.getElementById('remote-video');
 const monitorStatus = document.getElementById('monitor-status');
+const secretPinInput = document.getElementById('secret-pin');
+const btnConnectSecure = document.getElementById('btn-connect-secure');
 
-// ★追加：カメラ映像を取得する共通関数
+// カメラ映像を取得する共通関数
 async function getCameraStream() {
   if (localStream) {
-    // すでにカメラが動いていたら一度止める（カメラ使用中のランプを消すため）
+    // すでにカメラが動いていたら一度止める
     localStream.getTracks().forEach(track => track.stop());
   }
 
-  // useFrontCameraがtrueならインカメラ、falseなら背面カメラ
   const mode = useFrontCamera ? "user" : "environment";
 
   localStream = await navigator.mediaDevices.getUserMedia({
@@ -38,12 +41,19 @@ btnCamera.addEventListener('click', async () => {
   cameraSection.classList.remove('hidden');
 
   try {
-    await getCameraStream(); // ★カメラ取得関数を呼び出し
+    await getCameraStream();
 
     peer = new Peer(CAMERA_ID);
 
+    // モニターから着信があった際の処理
     peer.on('call', (call) => {
-      call.answer(localStream);
+      // モニター側から送られてきたパスワードを検証
+      if (call.metadata && call.metadata.pin === SECRET_PIN) {
+        call.answer(localStream); // パスワードが一致したら映像を返す
+      } else {
+        console.warn('パスワードが一致しないため、通信をブロックしました');
+        call.close();
+      }
     });
 
   } catch (err) {
@@ -51,16 +61,14 @@ btnCamera.addEventListener('click', async () => {
   }
 });
 
-// ★追加：カメラ切り替えボタンの処理
+// カメラ切り替えボタンの処理（通信中も途切れず切り替え可能）
 if (btnSwitchCamera) {
   btnSwitchCamera.addEventListener('click', async () => {
-    useFrontCamera = !useFrontCamera; // モードを反転させる
-    await getCameraStream(); // 新しいカメラを取得し直す
+    useFrontCamera = !useFrontCamera;
+    await getCameraStream();
 
-    // すでにモニターと通信中の場合、送信している映像データを新しいカメラのものに差し替える
     if (peer) {
       const newVideoTrack = localStream.getVideoTracks()[0];
-      // 通信中のすべての接続先（モニター）を探して映像を切り替える
       for (let conns in peer.connections) {
         peer.connections[conns].forEach(conn => {
           if (conn.peerConnection) {
@@ -75,21 +83,43 @@ if (btnSwitchCamera) {
   });
 }
 
-// 【モニターとして使う（Mac / iPad用）】
+// 【モニターモードへ遷移する（Mac / iPad用）】
 btnMonitor.addEventListener('click', () => {
   modeSelection.classList.add('hidden');
   monitorSection.classList.remove('hidden');
 
+  // 前回入力したパスワードがブラウザに保存されていれば自動入力する
+  const savedPin = localStorage.getItem('savedBabyCamPin');
+  if (savedPin) {
+    secretPinInput.value = savedPin;
+  }
+});
+
+// 【パスワードを送信して接続する】
+btnConnectSecure.addEventListener('click', () => {
+  const enteredPin = secretPinInput.value.trim();
+
+  if (!enteredPin) {
+    alert('合言葉を入力してください');
+    return;
+  }
+
+  // 次回から入力を省略できるように localStorage にパスワードを保存
+  localStorage.setItem('savedBabyCamPin', enteredPin);
+
+  monitorStatus.textContent = "認証して呼び出しています(v5)...";
+
   peer = new Peer();
 
   peer.on('open', () => {
-    monitorStatus.textContent = "カメラを呼び出しています(v4)...";
-
-    // ダミーの空ストリームを作ってカメラに発信する
+    // 安定化ハック：ダミーの空ストリームを作って発信
     const canvas = document.createElement('canvas');
     const dummyStream = canvas.captureStream();
 
-    const call = peer.call(CAMERA_ID, dummyStream);
+    // 接続要求に metadata としてパスワードを添付する
+    const call = peer.call(CAMERA_ID, dummyStream, {
+      metadata: { pin: enteredPin }
+    });
 
     call.on('stream', (remoteStream) => {
       monitorStatus.textContent = "映像を受信しました";
@@ -100,8 +130,8 @@ btnMonitor.addEventListener('click', () => {
       });
     });
 
-    call.on('error', (err) => {
-      monitorStatus.textContent = "通話エラー: " + err;
+    call.on('close', () => {
+      monitorStatus.textContent = "合言葉が間違っているか、カメラが切断されました";
     });
   });
 

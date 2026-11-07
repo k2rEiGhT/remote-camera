@@ -5,6 +5,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ベビーモニター</title>
+  <link rel="icon" href="favicon.png" type="image/png">
+  <link rel="apple-touch-icon" href="favicon.png">
   <link rel="stylesheet" href="style.css">
   <!-- PeerJSの読み込み -->
   <script src="https://unpkg.com/peerjs@1.5.1/dist/peerjs.min.js"></script>
@@ -32,7 +34,11 @@
     <!-- モニターモード（視聴側：iPad / iPhone） -->
     <div id="monitor-section" class="hidden">
       <h2>モニターモード</h2>
-      <p id="monitor-status">カメラに接続中...</p>
+      <!-- ★追加：パスワード入力欄 -->
+      <input type="password" id="secret-pin" placeholder="合言葉を入力">
+      <button id="btn-connect-secure">接続する</button>
+
+      <p id="monitor-status">待機中...</p>
       <video id="remote-video" autoplay playsinline></video>
     </div>
   </div>

@@ -107,7 +107,7 @@ btnConnectSecure.addEventListener('click', () => {
 
   // 次回から入力を省略できるように localStorage に保存
   localStorage.setItem('savedBabyCamPin', enteredPin);
-  monitorStatus.textContent = "認証中(v10)...";
+  monitorStatus.textContent = "認証中(v11)...";
 
   peer = new Peer();
 
@@ -186,10 +186,9 @@ if (btnFullscreen) {
 }
 
 // ==========================================
-// ★追加：タッチ操作（リロード、ズーム、スワイプ）の統合処理
+// ★タッチ操作（ズーム、パン、ダブルタップ）の処理
+// ※ 引っ張ってリロードする機能は削除しました
 // ==========================================
-let touchStartY = 0;
-let isPulling = false;
 let currentScale = 1;
 let startDistance = 0;
 let startScale = 1;
@@ -201,32 +200,10 @@ let startY = 0;
 
 const videoContainer = document.querySelector('.video-container');
 
-// 1. 画面全体へのタッチ（引っ張ってリロード判定用）
-document.addEventListener('touchstart', (e) => {
-  // 拡大していない時の1本指タッチのみリロード準備
-  if (e.touches.length === 1 && currentScale === 1) {
-    touchStartY = e.touches[0].clientY;
-    isPulling = true;
-  }
-}, { passive: true });
-
-document.addEventListener('touchmove', (e) => {
-  if (isPulling && currentScale === 1) {
-    const pullDistance = e.touches[0].clientY - touchStartY;
-    if (pullDistance > 150) {
-      isPulling = false;
-      document.body.style.transition = 'opacity 0.2s ease';
-      document.body.style.opacity = '0.3';
-      setTimeout(() => location.reload(), 200);
-    }
-  }
-}, { passive: true });
-
-// 2. 映像エリアへのタッチ（ズーム＆パン操作）
+// 映像エリアへのタッチ（ズーム＆パン操作）
 videoContainer.addEventListener('touchstart', (e) => {
   if (e.touches.length === 2) {
     // 2本指（ピンチズーム開始）
-    isPulling = false;
     isPanning = false;
     startDistance = Math.hypot(
       e.touches[0].clientX - e.touches[1].clientX,
@@ -235,7 +212,6 @@ videoContainer.addEventListener('touchstart', (e) => {
     startScale = currentScale;
   } else if (e.touches.length === 1 && currentScale > 1) {
     // 拡大中の1本指（スワイプで映像を移動）
-    isPulling = false;
     isPanning = true;
     startX = e.touches[0].clientX - pointX;
     startY = e.touches[0].clientY - pointY;
@@ -270,7 +246,7 @@ videoContainer.addEventListener('touchend', (e) => {
     updateVideoTransform();
   }
 
-  // 3. ダブルタップで一気に拡大・リセット
+  // ダブルタップで一気に拡大・リセット
   if (e.changedTouches.length === 1) {
     const currentTime = new Date().getTime();
     const tapLength = currentTime - lastTapTime;

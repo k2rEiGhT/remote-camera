@@ -187,3 +187,9 @@ video {
 .overlay-icon-btn:hover {
   background-color: rgba(0, 0, 0, 0.8);
 }
+
+/* ★追加：映像のズームを滑らかにする設定 */
+#remote-video {
+  transition: transform 0.1s ease-out;
+  transform-origin: center center;
+}

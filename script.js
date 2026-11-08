@@ -107,7 +107,7 @@ btnConnectSecure.addEventListener('click', () => {
 
   // 次回から入力を省略できるように localStorage に保存
   localStorage.setItem('savedBabyCamPin', enteredPin);
-  monitorStatus.textContent = "認証中(v9)...";
+  monitorStatus.textContent = "認証中(v10)...";
 
   peer = new Peer();
 

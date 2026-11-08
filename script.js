@@ -170,15 +170,13 @@ if (btnPip) {
   });
 }
 
-// 全画面表示ボタンの処理
+// 全画面表示ボタンの処理（元の仕様：映像単体をフルスクリーン化）
 if (btnFullscreen) {
   btnFullscreen.addEventListener('click', () => {
-    // ★変更：映像単体ではなく、ボタンも含む「枠（コンテナ）」ごと全画面にする
-    const container = document.querySelector('.video-container');
-    if (container.requestFullscreen) {
-      container.requestFullscreen(); // Mac / iPad用
-    } else if (container.webkitRequestFullscreen) {
-      container.webkitRequestFullscreen(); // 古いSafari用
+    if (remoteVideo.requestFullscreen) {
+      remoteVideo.requestFullscreen(); // Mac / iPad用
+    } else if (remoteVideo.webkitRequestFullscreen) {
+      remoteVideo.webkitRequestFullscreen(); // 古いSafari用
     } else if (remoteVideo.webkitEnterFullscreen) {
       remoteVideo.webkitEnterFullscreen(); // iPhone用（ネイティブプレイヤー起動）
     }

@@ -172,6 +172,8 @@ if (btnConnectSecure) {
       return;
     }
 
+    localStorage.setItem('baby_cam_pin', enteredPin);
+
     if (pinGroup) pinGroup.classList.add('hidden');
     monitorStatus.textContent = '認証中(v10)...';
 

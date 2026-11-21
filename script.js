@@ -5,21 +5,33 @@ const CAMERA_ID = 'baba-baby-cam-secret2026';
 const SECRET_PIN = 'risaki';
 
 // ★TURNサーバー（中継役）の設定
-// Meteredで取得した username / credential に書き換えてください
 const peerConfig = {
   config: {
     iceServers: [
       { urls: 'stun:stun.l.google.com:19302' },
       {
-        urls: 'turn:a.relay.metered.ca:80',
-        username: 'ここに取得したusername',
-        credential: 'ここに取得したcredential'
+        urls: "stun:stun.relay.metered.ca:80",
       },
       {
-        urls: 'turn:a.relay.metered.ca:443?transport=tcp',
-        username: 'ここに取得したusername',
-        credential: 'ここに取得したcredential'
-      }
+        urls: "turn:global.relay.metered.ca:80",
+        username: "c9ad8815b23dfe694ff330ae",
+        credential: "DXwyP/xdU/ENgmcP",
+      },
+      {
+        urls: "turn:global.relay.metered.ca:80?transport=tcp",
+        username: "c9ad8815b23dfe694ff330ae",
+        credential: "DXwyP/xdU/ENgmcP",
+      },
+      {
+        urls: "turn:global.relay.metered.ca:443",
+        username: "c9ad8815b23dfe694ff330ae",
+        credential: "DXwyP/xdU/ENgmcP",
+      },
+      {
+        urls: "turns:global.relay.metered.ca:443?transport=tcp",
+        username: "c9ad8815b23dfe694ff330ae",
+        credential: "DXwyP/xdU/ENgmcP",
+      },
     ]
   }
 };

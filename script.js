@@ -25,19 +25,20 @@ const peerConfig = {
 };
 
 // ==========================================
-// DOM要素の取得
+// DOM要素の取得（index.htmlのIDに完全一致）
 // ==========================================
+const mainTitle = document.getElementById('main-title');
 const modeSelection = document.getElementById('mode-selection');
-const cameraView = document.getElementById('camera-view');
-const monitorView = document.getElementById('monitor-view');
+const cameraSection = document.getElementById('camera-section');
+const monitorSection = document.getElementById('monitor-section');
 
 const btnCamera = document.getElementById('btn-camera');
 const btnMonitor = document.getElementById('btn-monitor');
 const btnSwitchCamera = document.getElementById('btn-switch-camera');
 
-const pinInput = document.getElementById('pin-input');
+const pinGroup = document.getElementById('pin-group');
+const secretPinInput = document.getElementById('secret-pin');
 const btnConnectSecure = document.getElementById('btn-connect-secure');
-const pinContainer = document.getElementById('pin-container');
 
 const localVideo = document.getElementById('local-video');
 const remoteVideo = document.getElementById('remote-video');
@@ -78,15 +79,16 @@ async function getCameraStream() {
 
 if (btnCamera) {
   btnCamera.addEventListener('click', async () => {
+    if (mainTitle) mainTitle.classList.add('hidden');
     modeSelection.classList.add('hidden');
-    cameraView.classList.remove('hidden');
+    cameraSection.classList.remove('hidden');
     cameraStatus.textContent = 'カメラ準備中...';
 
     await getCameraStream();
 
     peer = new Peer(CAMERA_ID, peerConfig);
 
-    peer.on('open', (id) => {
+    peer.on('open', () => {
       cameraStatus.textContent = '待機中（接続可能）';
     });
 
@@ -129,8 +131,9 @@ if (btnSwitchCamera) {
 // ==========================================
 if (btnMonitor) {
   btnMonitor.addEventListener('click', () => {
+    if (mainTitle) mainTitle.classList.add('hidden');
     modeSelection.classList.add('hidden');
-    monitorView.classList.remove('hidden');
+    monitorSection.classList.remove('hidden');
   });
 }
 
@@ -146,16 +149,16 @@ function createEmptyStream() {
 
 if (btnConnectSecure) {
   btnConnectSecure.addEventListener('click', () => {
-    const enteredPin = pinInput.value.trim();
+    const enteredPin = secretPinInput.value.trim();
     if (enteredPin !== SECRET_PIN) {
       alert('合言葉が違います。');
       return;
     }
 
-    if (pinContainer) pinContainer.classList.add('hidden');
+    if (pinGroup) pinGroup.classList.add('hidden');
     monitorStatus.textContent = '認証中(v10)...';
 
-    peer = new Peer(peerConfig);
+    peer = new Peer(undefined, peerConfig);
 
     peer.on('open', () => {
       monitorStatus.textContent = 'カメラへ接続中...';
@@ -247,12 +250,12 @@ let pointY = 0;
 let startX = 0;
 let startY = 0;
 
-const videoContainer = document.querySelector('.video-container');
+// モニター側の映像コンテナのみを対象にする
+const monitorVideoContainer = document.querySelector('#monitor-section .video-container');
 
-if (videoContainer) {
-  videoContainer.addEventListener('touchstart', (e) => {
+if (monitorVideoContainer) {
+  monitorVideoContainer.addEventListener('touchstart', (e) => {
     if (e.touches.length === 2) {
-      // 2本指（ピンチズーム開始）
       isPanning = false;
       startDistance = Math.hypot(
         e.touches[0].clientX - e.touches[1].clientX,
@@ -260,24 +263,23 @@ if (videoContainer) {
       );
       startScale = currentScale;
     } else if (e.touches.length === 1 && currentScale > 1) {
-      // 拡大中の1本指（スワイプで映像を移動）
       isPanning = true;
       startX = e.touches[0].clientX - pointX;
       startY = e.touches[0].clientY - pointY;
     }
   }, { passive: false });
 
-  videoContainer.addEventListener('touchmove', (e) => {
+  monitorVideoContainer.addEventListener('touchmove', (e) => {
     if (e.touches.length === 2) {
-      e.preventDefault(); // ズーム中の画面スクロールをブロック
+      e.preventDefault();
       const currentDistance = Math.hypot(
         e.touches[0].clientX - e.touches[1].clientX,
         e.touches[0].clientY - e.touches[1].clientY
       );
-      currentScale = Math.min(Math.max(1, startScale * (currentDistance / startDistance)), 5); // 最大5倍まで
+      currentScale = Math.min(Math.max(1, startScale * (currentDistance / startDistance)), 5);
       updateVideoTransform();
     } else if (isPanning && currentScale > 1 && e.touches.length === 1) {
-      e.preventDefault(); // 映像移動中の画面スクロールをブロック
+      e.preventDefault();
       pointX = e.touches[0].clientX - startX;
       pointY = e.touches[0].clientY - startY;
       updateVideoTransform();
@@ -285,11 +287,10 @@ if (videoContainer) {
   }, { passive: false });
 
   let lastTapTime = 0;
-  videoContainer.addEventListener('touchend', (e) => {
+  monitorVideoContainer.addEventListener('touchend', (e) => {
     if (e.touches.length < 2) startDistance = 0;
     if (e.touches.length === 0) isPanning = false;
 
-    // 縮小しすぎた場合は元のサイズに戻す
     if (currentScale <= 1) {
       currentScale = 1;
       pointX = 0;
@@ -297,7 +298,6 @@ if (videoContainer) {
       updateVideoTransform();
     }
 
-    // ダブルタップで一気に拡大・リセット
     if (e.changedTouches.length === 1) {
       const currentTime = new Date().getTime();
       const tapLength = currentTime - lastTapTime;
@@ -305,9 +305,9 @@ if (videoContainer) {
         if (currentScale > 1) {
           currentScale = 1;
           pointX = 0;
-          pointY = 0; // リセット
+          pointY = 0;
         } else {
-          currentScale = 2.5; // 2.5倍に拡大
+          currentScale = 2.5;
         }
         updateVideoTransform();
         e.preventDefault();

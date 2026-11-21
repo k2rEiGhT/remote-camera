@@ -146,6 +146,11 @@ if (btnMonitor) {
     if (mainTitle) mainTitle.classList.add('hidden');
     modeSelection.classList.add('hidden');
     monitorSection.classList.remove('hidden');
+
+    const savedPin = localStorage.getItem('baby_cam_pin');
+    if (savedPin && secretPinInput) {
+      secretPinInput.value = savedPin;
+    }
   });
 }
 
